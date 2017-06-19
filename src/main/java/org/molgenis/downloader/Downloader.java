@@ -30,6 +30,7 @@ public class Downloader
 	private static final String OVERWRITE = "overwrite";
 	private static final String PAGESIZE = "pageSize";
 	private static final String DEBUG = "debug";
+        private static final String OVERRIDE_URL = "overrideURL";
 
 	public static boolean debug;
 
@@ -73,6 +74,7 @@ public class Downloader
 		parser.acceptsAll(asList("i", INSECURE_SSL), "Ignore SSL certicate chain errors and hostname mismatches.");
 		parser.acceptsAll(asList("s", PAGESIZE), "The pagesize for the REST responses, increase in case of large datasets, maximum value=10000").withRequiredArg()
 				.ofType(Integer.class);
+                parser.acceptsAll(asList("O", OVERRIDE_URL), "Override the URL returned by the REST-API in case of a proxy that does not configured properly");
 		parser.acceptsAll(asList("d", DEBUG), "print debug logging to console");
 
 		return parser;
@@ -90,12 +92,13 @@ public class Downloader
 		String username = (String) options.valueOf(ACCOUNT);
 		String password = (String) options.valueOf(PASSWORD);
 		boolean overwrite = options.has(OVERWRITE);
+                boolean override = options.has(OVERRIDE_URL);
 
 		debug = options.has(DEBUG);
 
 		final HttpClient client = HttpClientFactory.create(insecureSSL);
 
-		try (final MolgenisClient molgenis = new MolgenisRestApiClient(client, url))
+		try (final MolgenisClient molgenis = new MolgenisRestApiClient(client, url, override))
 		{
 
 			if (username != null)
@@ -123,7 +126,7 @@ public class Downloader
 				if (hasErrors)
 				{
 					writeToConsole("Errors occurred while writing EMX\n");
-					emxClient.getExceptions().forEach(ex -> writeToConsole("Exception: %s\n", ex));
+					emxClient.getExceptions().forEach(ex -> System.err.println(ex));
 				}
 			}
 		}

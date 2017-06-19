@@ -17,7 +17,7 @@ class MetadataFilter implements MetadataConsumer
 	private final MetadataConsumer consumer;
 	private final List<String> entities;
 	private MetadataRepository target;
-	private MolgenisVersion version;
+	private final MolgenisVersion version;
 
 	public MetadataFilter(final List<String> entities, final MetadataConsumer consumer, MolgenisVersion version)
 	{

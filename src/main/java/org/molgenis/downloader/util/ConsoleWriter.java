@@ -7,11 +7,14 @@ import java.io.IOException;
 
 public class ConsoleWriter
 {
+        @SuppressWarnings("CallToPrintStackTrace")
 	public static void writeToConsole(String message, Exception e)
 	{
 		if (System.console() != null)
 		{
-			System.console().format(message + " %s\n", e.getLocalizedMessage()).flush();
+			System.console().format(message);
+                        if (e != null) System.console().format(e.getMessage());
+                        System.console().format("\n").flush();
 		}
 		else
 		{
@@ -24,7 +27,7 @@ public class ConsoleWriter
 	public static void writeToConsole(String message)
 	{
 		writeToConsole(message, null);
-	}
+		}
 
 	public static void debug(String message){
 		if(Downloader.debug){

@@ -44,11 +44,17 @@ public class MolgenisRestApiClient implements MolgenisClient
 	private MetadataConverter converter;
 	private final URI uri;
 	private String token;
+        private final boolean overrideURL;
 
-	public MolgenisRestApiClient(final HttpClient client, final URI uri)
+        public MolgenisRestApiClient(final HttpClient client, final URI uri)
+        {
+                this(client, uri, false);
+        }
+	public MolgenisRestApiClient(final HttpClient client, final URI uri, final boolean overrideURL)
 	{
 		this.client = client;
 		this.uri = uri;
+                this.overrideURL = overrideURL;
 	}
 
 	@Override
@@ -110,9 +116,10 @@ public class MolgenisRestApiClient implements MolgenisClient
 			final String versionString = json.getString("molgenisVersion");
 			version = MolgenisVersion.from(versionString);
 		}
-		catch (Exception e)
+		catch (ParseException | JSONException e)
 		{
-			//Leave empty
+                        // Version before 1.13.0 did not have the rest API version endpoint.
+			version = MolgenisVersion.from("1.12.2");
 		}
 		return version;
 	}
@@ -146,6 +153,10 @@ public class MolgenisRestApiClient implements MolgenisClient
 				nextHref = json.optString("nextHref");
 				if (StringUtils.isNotEmpty(nextHref))
 				{
+                                        if (overrideURL)
+                                        {
+                                                nextHref = overrideURL(nextHref);
+                                        }
 					json = getJsonDataFromUrl(nextHref);
 				}
 			}
@@ -159,6 +170,16 @@ public class MolgenisRestApiClient implements MolgenisClient
 
 	}
 
+        private String overrideURL(String url) throws URISyntaxException {
+                final URI given = new URI(url);
+                /* Overwrite schema, host and port with the URL passed on the commandline */
+                final URI corrected = new URI(uri.getScheme(),
+                        uri.getUserInfo(), uri.getHost(), uri.getPort(),
+                        given.getPath(), given.getQuery(), given.getFragment());
+                ConsoleWriter.debug(corrected.toString());
+                return corrected.toString();
+        }
+        
 	private JSONObject getJsonDataFromUrl(String url) throws IOException, URISyntaxException
 	{
 		JSONObject json;
@@ -174,7 +195,11 @@ public class MolgenisRestApiClient implements MolgenisClient
 		try
 		{
 			if (converter == null) initConverter();
-			streamEntityData(converter.getLanguagesRepositoryName(), converter::toLanguage);
+                        // Languages were introduced in 1.15.0
+                        if (getVersion().equalsOrLargerThan(MolgenisVersion.from("1.15.0")))
+                        {
+                                streamEntityData(converter.getLanguagesRepositoryName(), converter::toLanguage);
+                        }
 			streamEntityData(converter.getTagsRepositoryName(), converter::toTag);
 			streamEntityData(converter.getPackagesRepositoryName(), converter::toPackage);
 			streamEntityData(converter.getAttributesRepositoryName(), converter::toAttribute);

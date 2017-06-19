@@ -25,7 +25,7 @@ class FilteredMetadataRepository implements MetadataRepository
 		attributes = new LinkedHashSet<>();
 		packages = new LinkedHashSet<>();
 		tags = new LinkedHashSet<>();
-		languages = source.getLanguages();
+                        languages = source.getLanguages();
 		if (version.smallerThan(MolgenisRestApiClient.VERSION_3))
 		{
 			source.getEntities().stream().filter((ent) -> entities.contains(ent.getFullName())).forEach(this::traverse);
