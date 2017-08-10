@@ -126,7 +126,7 @@ public class Downloader
 				if (hasErrors)
 				{
 					writeToConsole("Errors occurred while writing EMX\n");
-					emxClient.getExceptions().forEach(ex -> System.err.println(ex));
+					emxClient.getExceptions().forEach(ex -> writeToConsole("Exception: ", ex));
 				}
 			}
 		}
